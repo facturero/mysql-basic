@@ -1,6 +1,6 @@
 # mysql-basic
 
-Proyecto de **infraestructura básica** (no es un microservicio) para desplegar y versionar **MySQL 9** en tu cluster **k3s**, usando GitOps simple: cualquier cambio en `k8s/` que se suba a `main` se aplica automáticamente vía el runner self-hosted de GitHub Actions.
+Proyecto de **infraestructura básica** (no es un microservicio) para desplegar y versionar **MySQL 9** en tu cluster **k3s**, usando GitOps simple: cualquier cambio en `k8s/` que se suba a `master` se aplica automáticamente vía el runner self-hosted de GitHub Actions.
 
 ## ¿Qué hace?
 
@@ -15,16 +15,7 @@ Proyecto de **infraestructura básica** (no es un microservicio) para desplegar 
 
 ## Configuración inicial (una sola vez)
 
-1. Crea el repo en GitHub y conéctalo:
-
-   ```bash
-   cd C:\Users\sansh\cmr-proyect\backend\mysql-basic
-   git init
-   git branch -M main
-   git remote add origin <URL_DE_TU_REPO>
-   ```
-
-2. Agrega estos **Secrets** en GitHub (Settings → Secrets and variables → Actions):
+1. Agrega estos **Secrets** en GitHub (Settings → Secrets and variables → Actions) del repo `mysql-basic`:
 
    | Secret | Ejemplo |
    |---|---|
@@ -33,14 +24,14 @@ Proyecto de **infraestructura básica** (no es un microservicio) para desplegar 
    | `MYSQL_USER` | `crm_user` |
    | `MYSQL_PASSWORD` | contraseña de la app |
 
-3. Confirma que tu runner self-hosted tiene `kubectl` configurado apuntando a tu cluster k3s (normalmente vía `KUBECONFIG=~/.kube/config`, como quedó en la instalación).
+2. Confirma que tu runner self-hosted tiene `kubectl` configurado apuntando a tu cluster k3s (normalmente vía `KUBECONFIG=~/.kube/config`, como quedó en la instalación).
 
-4. Sube el proyecto:
+3. Sube el proyecto:
 
    ```bash
    git add .
    git commit -m "infra: mysql-basic"
-   git push -u origin main
+   git push -u origin master
    ```
 
 ## Flujo día a día
@@ -59,6 +50,13 @@ El runner aplica los cambios automáticamente. También puedes disparar el deplo
 kubectl get pods -l app=mysql-basic
 kubectl logs deployment/mysql-basic
 ```
+
+## Si el auto-despliegue no se dispara
+
+- Confirma en GitHub → pestaña **Actions** si aparece el workflow "Deploy mysql-basic to k3s" corriendo o con error.
+- Confirma que tu runner self-hosted está **online** (Settings → Actions → Runners, debe verse verde/"Idle").
+- Confirma que el push fue a la rama `master` (la que espera el trigger) y que tocó archivos dentro de `k8s/`.
+- Si el runner está online pero el job falla en el paso de `kubectl`, revisa que el usuario que corre el runner tenga acceso al `kubeconfig` de k3s (variable `KUBECONFIG` visible para el servicio, no solo para tu sesión interactiva).
 
 ## Notas
 
