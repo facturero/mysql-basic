@@ -2,7 +2,7 @@ name: Deploy mysql-basic to k3s
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
     paths:
       - "k8s/**"
   workflow_dispatch: {}
