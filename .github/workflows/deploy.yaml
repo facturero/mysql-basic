@@ -1,0 +1,35 @@
+name: Deploy mysql-basic to k3s
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "k8s/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create mysql-basic secret
+        run: |
+          kubectl create secret generic mysql-basic-credentials \
+            --from-literal=root-password="${{ secrets.MYSQL_ROOT_PASSWORD }}" \
+            --from-literal=database="${{ secrets.MYSQL_DATABASE }}" \
+            --from-literal=user="${{ secrets.MYSQL_USER }}" \
+            --from-literal=password="${{ secrets.MYSQL_PASSWORD }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/mysql-basic-pvc.yaml
+          kubectl apply -f k8s/mysql-basic-deployment.yaml
+          kubectl apply -f k8s/mysql-basic-service.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment mysql-basic --timeout=180s
